@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import Search from './components/Search';
+import Loading from './components/Loading';
+import MovieCard from './components/MovieCard';
+import { useDebounce } from 'react-use';
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -20,13 +23,23 @@ const App = () => {
   const [movieList, setMovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const fetchMovies = async () => {
+
+//debounce the search term to prevent making too many API request
+//by waiting for the user to stop typing for .5 sec
+  useDebounce( () => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
+
+
+  const fetchMovies = async (query = '') => {
     setIsLoading(true);
     setErrorMessage('');
   try {
     // /discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc
-    const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+    const endpoint = query 
+    ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+    : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+
     const response = await fetch(endpoint, API_OPTIONS);
     // alert(response);
 
@@ -55,33 +68,34 @@ const App = () => {
 }
   
   useEffect(() => {
-    fetchMovies();
-  }, []);
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
   
 return (
   <main>
-    <div className="pattern"/>
+    <title>Popcorn Time 🍿</title>
+  
 
     <div className="wrapper">
       <header>
-       <img src="./hero.png" alt="hero banner"/>
-        <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy</h1>
+       <img src="./hero.png" alt="hero banner" className='w-70 md:w-70 lg:w-70' />
+        <h1>Find Your <span className="text-gradient">Movie</span> Rating</h1>
       <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
       </header>
 
   <section className="all-movies">
-  <h2>All Movies</h2>
+  <h2 className='mt-[20px]'>All Movies</h2>
 
   {/* {errorMessage && <p className='text-red-500'>{errorMessage}</p>} */}
 
   {isLoading ? (
-    <p className='text-white'>Loading...</p>
+    <Loading/>
   ) : errorMessage ? (
     <p className='text-red-500'>{errorMessage}</p>
   ) : (
     <ul>
       {movieList.map((movie) => (
-        <p key={movie.id} className='text-white'>{movie.title}</p>
+        <MovieCard key={movie.id} movie={movie}/>
       ))}
     </ul>
   )
