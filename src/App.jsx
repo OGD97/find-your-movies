@@ -73,7 +73,8 @@ const App = () => {
   
 return (
   <main>
-    <title>Popcorn Time 🍿</title>
+    <title>It's Popcorn Time! 🍿</title>
+    <link rel="icon" href="./logo.png" />
   
 
     <div className="wrapper">
